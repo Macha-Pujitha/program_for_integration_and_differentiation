@@ -1,0 +1,288 @@
+#include<stdio.h>
+#include<conio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<ctype.h>
+#include<math.h>
+#define e 2.71828
+#define E 2.71828
+
+//Global declarations
+float x,z1,z2,z3;
+int top=0;
+float stack[100];
+char in[100],post[100];
+
+//stack precedence
+int stackp(char symbol)
+{ 
+switch(symbol)
+{
+case '+':
+case '-':return 2;
+case '/':
+case '*':return 4;
+case '^':
+case '$':return 5;
+case '(':return 0;
+case '#':return -1;
+default: return 8;
+}
+}
+
+//inpu precedence
+int inputp(char symbol)
+{ 
+switch(symbol)
+{
+case '+':
+case '-':return 1;
+case '/':
+case '*':return 3;
+case '^':
+case '$':return 6;
+case '(':return 9;
+case ')':return 0;
+default: return 7;
+}
+}
+
+//function to convert infix expression to postfix
+void in_post(char in[], char post[])
+{
+int top,i,j;
+char s[100],symbol;
+top=-1;
+j=0;
+s[++top]='#';
+for(i=0;i<strlen(in);i++)
+{
+symbol=in[i];
+while(stackp(s[top])>inputp(symbol))
+{
+post[j]=s[top];
+top=top-1;
+j++;
+}
+if (stackp(s[top])!=inputp(symbol))
+s[++top]=symbol;
+else
+top--;
+}
+while(s[top]!='#')
+post[j++]=s[top--];
+post[j]='\0';
+}
+
+//function to push contents onto stack
+void push(float op)
+{
+stack[++top]=op;
+}
+
+//function to pop contents from stack
+float pop()
+{
+return (stack[top--]);
+}
+
+//function to evaluate postfix expression
+float evaluate(char post[],float x)
+{
+int i=0,j;
+float s,a,b;
+double y;
+
+while(post[i]!='\0')
+{
+if(isalpha(post[i]))
+{
+switch(post[i])//to check which functio is being used
+{
+case 'c':push(cos(x));break;
+case 's':push(sin(x));break;
+case 't':push(tan(x));break;
+case 'a':push(1/sin(x));break;
+case 'b':push(1/cos(x));break;
+case 'm':push(1/tan(x));break;
+case 'l':push(log(x));break;
+case 'd':push(log10(x));break;
+case 'e':push(pow(e,(double)x));break;
+case 'f':push(cosh(x));break;
+case 'g':push(sinh(x));break;
+case 'h':push(tanh(x));break;
+case 'i':push(1/sinh(x));break;
+case 'j':push(1/cosh(x));break;
+case 'k':push(1/tanh(x));break;
+case 'p':push(z1);break;
+case 'q':push(z2);break;
+case 'r':push(z3);break;
+case 'x':push(x);break;
+default:printf("Invalid character %c\n",post[i]);
+}
+}
+else if(isdigit(post[i]))
+push(post[i]-'0');
+else
+{
+switch(post[i])
+{
+case '+':    
+push(pop()+pop());
+break;
+case '-':    
+a=pop();
+push(pop()-a);
+break;
+case '/':    
+a=pop();
+
+push(pop()/a);
+break;
+case '*':    
+push(pop()*pop());
+break;
+case '^':
+case '$':
+a=pop();
+b=pop();
+y=(double)pow((double)b,(double)a);
+push(y);
+break;
+}
+}i++;
+}
+s=pop();
+return s;
+}
+
+//function to take exprssion input
+void exp()
+{
+char cn;
+int i;
+printf("Codes:\n");
+printf("c-cos(x)\ns-sin(x)\nt-tan(x)\na-cosec(x)\nb-sec(x)\nm-cot(x)\nd-log 10(x)\nl-ln(x)\ne-e^x\nf-cosh(x)\ng-sinh(x)\nh-tanh(x)\n");
+printf("i-cosech(x)\nj-sech(x)\nk-coth(x)\nUse p or q or r for floating point constantsp-constant1\nq-constant2\nr-constant3\n");
+
+printf("\nDo you want an example of a valid expression?(y/n)\n");
+    scanf(" %cn",&cn);
+
+cn=tolower(cn);
+
+switch(cn)
+{
+case 'y':printf("(x*x)+1/X+p+c\nEnter values of p,q,r\n2.6\n0\n0\nIs equivalent to (x*x)+1/x+2.6+cos(x)\n");
+case 'n':break;
+default:printf("Invalid choice.\n");return;
+}
+printf("\n");
+printf("Enter a valid expression\n");
+scanf("%s",in);
+for(i=0;i<strlen(in);i++)
+in[i]=tolower(in[i]);
+printf("Enter values of constants p,q,r\n");
+scanf("%f%f%f",&z1,&z2,&z3);
+
+in_post(in,post);
+}
+
+//function to calculate f(x)
+float f(float x)
+{ 
+float s;
+s=evaluate(post,x);
+
+return s;
+}
+
+//funtion to inegrate
+void integ()
+{
+      float a,b,h,sol=0;
+      int i;
+
+      printf("Enter the value of upper limit=");
+      scanf("%f",&b);
+
+      printf("Enter the value of lower limit= ");
+      scanf("%f",&a);
+       
+      h=(b-a)/144;
+      
+      for(i=1;i<=24;i++)
+      {
+          sol=sol+((3*h/10)*(f(a)+f(a+2*h)+5*f(a+h)+6*f(a+3*h)+f(a+4*h)+5*f(a+5*h)+f(a+6*h)));  
+          a=a+6*h;  
+      }
+      
+ printf("Integral is : %f\n",sol);        
+          
+ }
+
+//functio to find derivative
+void dif()
+{
+float h=0.05,der;
+printf("Enter value of x\n");
+scanf("%f",&x);
+der=(-25*f(x)+48*f(x+h)-36*f(x+2*h)+16*f(x+3*h)-3*f(x+4*h))/(12*h);
+
+printf("Derivative is: %f",der);
+
+}
+
+
+void main()
+{    
+int ch,flag=1;
+char cn;
+printf("Program to calculate integral and derivative of a given method through numerical methods\n");
+while(flag==1)
+{
+   
+    printf("Enter choice\n");
+    printf("1.integration\n2.differentiation\n");
+    scanf("%d",&ch);
+if(ch!=1&&ch!=2)
+{
+printf("Invalid choice\n");
+printf("\n");
+    printf("Do you wish try again?(y/n)\n");
+             scanf(" %cn",&cn);
+
+    cn=tolower(cn);
+
+        switch(cn)
+    {
+       case 'y':printf("Enter choice\n");
+                    printf("1.integration\n2.differentiation\n");
+                    scanf("%d",&ch);break;
+       case 'n':flag=0;printf("Exiting out of the program\n");break;
+       default:printf("Invalid choice.\nBreaking out of the program\n");
+    }
+}
+exp();
+    
+    switch(ch)
+{
+case 1:integ();break;
+case 2:dif();break;
+default:break;    
+}
+printf("\n");
+printf("Do you wish continue?(y/n)\n");
+         scanf(" %cn",&cn);
+
+cn=tolower(cn);
+
+    switch(cn)
+{
+case 'y':break;
+case 'n':flag=0;printf("Exiting out of the program\n");break;
+default:printf("Invalid choice.\nBreaking out of the program\n");
+}
+ 
+}
+getch();
+}
